@@ -2,6 +2,20 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.myscheduler">
     <uses-permission android:name="android.permission.INTERNET" />
+　　
+    <!--他のアプリがプロバイダのデータにアクセスするために必要な権限-->
+    <uses-permission android:name="android.permission.READ_USER_DICTIONARY"/>
+
+    <!--スマホ内のMediaStroe内を検索するために必要な権限    -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
+    <!--エラーから必要と分かった権限    -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission-sdk-23 android:name="android.permission.CONNECTIVITY_INTERNAL" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.GET_TASKS" />
+    <uses-permission android:name="android.permission.WRITE_USER_DICTIONARY"/>
+
     <application
         android:name=".TaskTracker"
         android:allowBackup="true"

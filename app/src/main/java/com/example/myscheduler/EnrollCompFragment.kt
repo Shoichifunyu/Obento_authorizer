@@ -33,21 +33,7 @@ internal class EnrollCompFragment() : Fragment(){
         .allowQueriesOnUiThread(true)
         .schemaVersion(1)
         .build()
-    // private lateinit var realm: Realm
     private val realm: Realm = Realm.getInstance(config)
-
-    //override fun onCreate(savedInstanceState: Bundle?) {
-    //    super.onCreate(savedInstanceState)
-        //schema versionの整合、権限関係の設定
-    //    val config = RealmConfiguration.Builder()
-    //        .name("via_android_studio")
-     //           .deleteRealmIfMigrationNeeded()
-     //           .allowWritesOnUiThread(true)
-     //           .allowQueriesOnUiThread(true)
-     //        .schemaVersion(1)
-     //        .build()
-     //   realm = Realm.getInstance(config)
-   // }
 
     override fun onCreateView(
             inflater: LayoutInflater, container: ViewGroup?,
@@ -61,9 +47,6 @@ internal class EnrollCompFragment() : Fragment(){
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        view.findViewById<FloatingActionButton>(R.id.fab).setOnClickListener {
-            findNavController().navigate(R.id.action_to_enrollscrn)
-        }
         Realm.getInstanceAsync(config, object : Realm.Callback() {
             override fun onSuccess(realm: Realm) {
                 // since this realm should live exactly as long as this activity, assign the realm to a member variable
@@ -79,12 +62,7 @@ internal class EnrollCompFragment() : Fragment(){
             id?.let {
                 val action = EnrollCompFragmentDirections.actionToEnrollscrn(it)
                 findNavController().navigate(action)
-                //val schedule = Schedule()
-              //  realm.executeTransactionAsync { realm ->
-                //    realm.insert(schedule)
-              //  }
             }
-            //(activity as? MainActivity)?.setShopbuttonVisible(View.VISIBLE)
         }
             }
         })

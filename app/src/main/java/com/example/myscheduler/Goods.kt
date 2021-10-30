@@ -2,6 +2,7 @@ package com.example.myscheduler
 
 import android.content.res.Resources
 import android.graphics.Insets.add
+import android.net.Uri
 import android.view.View
 import android.widget.ImageView
 import androidx.core.view.OneShotPreDrawListener.add
@@ -43,19 +44,19 @@ open class Goods(project: String? = "via_android_studio"): RealmObject() {
     @Required
     var goods_name: String = ""
     var goodURL: String = ""
-
 }
 
+/*
 data class Shops (
         val shop_name: String
 )
-data class GS(
+data class GoodsInfo(
     var goods_name : String,
     var shop_name: String,
     var goodImage: String = ""
 )
 
-fun getGoods(resources: Resources): MutableList<GS> {
+fun getGoods(resources: Resources): MutableList<GoodsInfo> {
     val assetManager = resources.assets
     //変数arrayにGoodsテーブルから全件抽出した結果を代入
     var array = realm.where<Goods>().findAll().sort("_id")
@@ -66,15 +67,16 @@ fun getGoods(resources: Resources): MutableList<GS> {
     val listType2 = object : TypeToken<MutableList<Shops>>() {}.type
     var array2 = Gson().fromJson<MutableList<Shops>>(str2, listType2)
     //お店の情報とGoods（商品）情報を統合したMutableListを作成
-    var array4 = mutableListOf<GS>()
+    var array4 = mutableListOf<GoodsInfo>()
     for (i in array.indices) {
-        var array3 = array[i]?.let { array[i]?.let { it1 -> GS(it.goods_name,array2[0].shop_name, it1.goodURL) } }
+        var array3 = array[i]?.let { array[i]?.let { it1 -> GoodsInfo(it.goods_name,array2[0].shop_name, it1.goodURL) } }
         if (array3 != null) {
             array4.add(array3)
         }
         }
     return array4
 }
+*/
 
 open class User(project: String? = "via_android_studio"): RealmObject() {
     @PrimaryKey

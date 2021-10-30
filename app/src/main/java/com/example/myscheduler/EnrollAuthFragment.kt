@@ -1,36 +1,45 @@
 package com.example.myscheduler
 
+import android.R
+import android.R.attr
 import android.content.Intent
-import android.graphics.Color
+import android.graphics.BitmapFactory
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.TextView
-import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
-import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.bumptech.glide.Glide
 import com.example.myscheduler.databinding.FragmentEnrollAuthBinding
-import com.google.android.material.snackbar.Snackbar
 import io.realm.Realm
 import io.realm.kotlin.createObject
 import io.realm.kotlin.where
 import io.realm.mongodb.User
 import io.realm.mongodb.sync.SyncConfiguration
-import java.io.File
+
+import kotlinx.android.synthetic.main.fragment_enroll_auth.*
+import java.io.BufferedInputStream
+import android.content.ContentResolver
+
+import android.R.attr.data
+import android.R.attr.grantUriPermissions
+import android.content.Context
+import android.content.Intent.*
+import kotlinx.android.synthetic.main.fragment_goods.*
+import org.bson.types.ObjectId
+import java.text.Collator.getInstance
+import java.util.Calendar.getInstance
 
 
 internal class EnrollAuthFragment : Fragment() {
     private var _binding: FragmentEnrollAuthBinding? = null
     private val binding get() = _binding!!
     private var user: User? = taskApp.currentUser()
-    //private var gUri: Uri? = null
-    private lateinit var goodView: ImageView
     private val partitionValue: String = "via_android_studio"
     private val config = SyncConfiguration.Builder(user!!, partitionValue)
         .allowWritesOnUiThread(true)
@@ -38,18 +47,44 @@ internal class EnrollAuthFragment : Fragment() {
         .schemaVersion(1)
         .build()
 
-    private lateinit var documentDir: File
-    private lateinit var shareFile: File
-
-    // private lateinit var realm: Realm
     private val realm: Realm = Realm.getInstance(config)
-    //private val args: EnrollAuthFragmentArgs by navArgs()
+    //private val startForResult = registerForActivityResult(ActivityResultContracts.GetContent(), this::saveEnroll)
 
-    //lateinit var getUri : ActivityResultLauncher<String>
+    //startActivityForResult実行時に第二引数に代入する
+    private val READ_REQUEST_CODE: Int = 42
 
-    private val startForResult = registerForActivityResult(ActivityResultContracts.GetContent(), this::saveEnroll)
-   // { uri ->  Log.d("EnrollAuthFragment", "uri: $uri")
-   // }
+    private val startForResult = registerForActivityResult(ActivityResultContracts.GetContent())
+    {uri: Uri ->
+        // 事前にシステムからそのファイルに付与されるURI権限を永続的に維持する。
+        /*val intent = Intent(ACTION_OPEN_DOCUMENT).also {
+            it.addCategory(CATEGORY_OPENABLE)
+            it.type = "image/*"
+            it.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+            it.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            it.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+        }
+        var takeFlags: Int  = (intent.flags
+                and (Intent.FLAG_GRANT_READ_URI_PERMISSION
+                or Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
+                Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION))
+        context?.contentResolver?.takePersistableUriPermission(uri, takeFlags)
+         */
+         */
+        //エラー「Requested flags 0x43, but only 0x3 are allowed」への対策として考えられるもの
+        //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+        //context?.contentResolver?から、context?.applicationContext?.contentResolver?に変更
+        //↑元に戻した
+            val takeFlags: Int  = FLAG_GRANT_READ_URI_PERMISSION or FLAG_GRANT_WRITE_URI_PERMISSION
+            //context?.contentResolver?.takePersistableUriPermission(uri, takeFlags)
+        //↑そもそもtakePersistableUriPermission使うとうまく起動しないのでgrantUriPermissionにした。
+        context?.grantUriPermission("com.example.myscheduler",uri, takeFlags)
+        //    }
+        return@registerForActivityResult saveEnroll(uri)
+    }
+
+    //GoodsFragmentから受け取った「GoodId」の有無を判断し、データの新規登録か更新かを判断する。
+    private val args: EnrollAuthFragmentArgs by navArgs()
+
     //private val receiveForResult = registerForActivityResult(ActivityResultContracts.) { uri ->
     //    Log.d("EnrollAuthFragment", "geturi: $uri")
     //}
@@ -63,38 +98,7 @@ internal class EnrollAuthFragment : Fragment() {
                     //    goods?.goodURL = URL
                     //}
      //           }
-                //private fun saveEnroll(view: View, URL: String?) {
-      //          when (args.goodId) {
-     //               null -> {
-     //                   realm.executeTransaction { transactionRealm ->
-     //                       val maxId = realm.where<Goods>().count()
-     //                       //val maxId = realm.where<Schedule>().max()
-      //                      val nextId = (maxId.toLong() ?: 0L) + 1L
-       //                     val goods = realm.createObject<Goods>(nextId)
-      //                      goods.goods_name = binding.goodName.text.toString()
-      //                      //setFragmentResultListener("URL") { key, bundle ->
-                            //    val UR = bundle.getString("URL")
-                            //    println("URL:" + URL)
-     //                       println("URL:" + uri)
-      //                      goods.goodURL = uri.toString()
-     //                       println(goods.goodURL)
-     //                   }
-     //               }
-     //               else -> {
-     //                   realm.executeTransaction { db: Realm ->
-     //                       val goods =
-     //                           db.where<Goods>().equalTo("_id", args.goodId).findFirst()
-     //                       goods?.goods_name = binding.goodName.text.toString()
-      //                      //setFragmentResultListener("URL") { key, bundle ->
-      //                      //     val URL = bundle.getString("URL")
-      //                      //    println("URL:" + URL)
-      //                      println("URL:" + uri)
-       //                     goods?.goodURL = uri.toString()
-      //                  }
-      //              }
-     //           }
-    //        }
-   //     })
+
   //  }
     //val intent = Intent()
     //private val REQUEST_PERMISSION : Int = 10
@@ -195,15 +199,35 @@ internal class EnrollAuthFragment : Fragment() {
         return binding.root
     }
 
-    private val args: EnrollAuthFragmentArgs by navArgs()
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        //Intent(Intent.ACTION_OPEN_DOCUMENT)
-        //intent.addCategory(Intent.CATEGORY_OPENABLE)
-        //intent.type = "image/*"
-        //intent.action = Intent.ACTION_GET_CONTENT
-        //startForResult.launch(intent)
+        //ファイルを開く（android studioの公式ページを参考にした）
+        val intent = Intent(ACTION_OPEN_DOCUMENT).apply {
+            addCategory(CATEGORY_OPENABLE)
+            //addFlags(FLAG_GRANT_READ_URI_PERMISSION)
+            //addFlags(FLAG_GRANT_WRITE_URI_PERMISSION)
+            type = "image/*"
+        }
+        /*val intent = Intent(ACTION_OPEN_DOCUMENT).also {
+            it.addCategory(CATEGORY_OPENABLE)
+            it.type = "image/*"
+            it.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+            it.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+         */
+         */
+        //エラー「No persistable permission grants found for UID 10134」への対策
+        //val intent: Intent
+        //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+        //    intent = Intent(ACTION_OPEN_DOCUMENT)
+            //intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+            //intent.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+        //} else {
+       //     intent = Intent(Intent.ACTION_GET_CONTENT)
+       // }
+        //intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true)
+        //intent.addCategory(CATEGORY_OPENABLE)
+        //intent.setType("image/*")
         // textView = view.findViewById(R.id.text_View
         //documentDir = File(requireContext().filesDir.toString() + "/document")
         //shareFile = File(documentDir.toString() + "/share_file")
@@ -280,17 +304,40 @@ internal class EnrollAuthFragment : Fragment() {
                     override fun onSuccess(realm: Realm) {
                         if (args.goodId != null) {
                             println("not null")
+                            //idフィールドがgoodIdと同じレコードを取得して変数goodsに代入する。
                             val goods = realm.where<Goods>()
                                 .equalTo("_id", args.goodId).findFirst()
                             binding.goodName.setText(goods?.goods_name)
-                            binding.goodTxtURL.text = goods?.goodURL
-                            context?.let {
-                                Glide.with(it)
-                                    .load(goods?.goodURL)
-                                    .centerCrop()
-                                    .into(binding.goodImage)
+                            binding.goodTxtURL.text = goods?.goodURL.toString()
+                            //画像を表示させる方法
+                            //その①
+                            //context?.let {
+                           //     Glide.with(it)
+                           //         .load(goods?.goodURL)
+                           //         .centerCrop()
+                           //         .into(binding.goodImage)
+                           // }
+
+                            //方法②　Uri→InputStream→Bitmap
+                            //事前にシステムからそのファイルに付与されるURI権限を永続的に維持する。
+                            //val contentResolver = context!!.applicationContext.contentResolver
+                            //val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                           //         Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                            //goods?.goodURL?.toUri()?.let {
+                           //     contentResolver.takePersistableUriPermission(
+                           //         it, takeFlags)
+                           // }
+
+                            //Uri→InputStream→Bitmap
+                            val stream = goods?.goodURL?.let {
+                                context!!.contentResolver.openInputStream(
+                                    it.toUri())
                             }
+                            val bitmap = BitmapFactory.decodeStream(BufferedInputStream(stream))
+                            binding.goodImage.setImageBitmap(bitmap)
+
                         }
+
 
                             binding.authSave.setOnClickListener {
                                 //val dialog = ConfirmDialog("画像をアップロード",
@@ -298,65 +345,135 @@ internal class EnrollAuthFragment : Fragment() {
                                 //setFragmentResultListener("requestKey") { key, bundle ->
                                 //    val uri = bundle.getString("resultKey")
                                 //    println("geturi:" + uri)
-                                    val dialog = ConfirmDialog("保存しますか", "保存する（画像を選択）",
-                                        {startForResult.launch("image/*")
-                                            //setFragmentResult(
-                                            //    "URL",
-                                            //    bundleOf("URL" to startForResult.launch(intent)))
-                                            // setFragmentResultListener("URL") { key, bundle ->
-                                            //     val URL = bundle.getString("URL")
-                                            //launcher.launch(WRITE_EXTERNAL_STORAGE)
+                                /*val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
+                                intent.addCategory(Intent.CATEGORY_OPENABLE)
+                                intent.type = "image/*"
+                                startForResult.launch(intent.toString())
+                                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                                 */*/
+                                startForResult.launch(intent.toString())
 
+
+                                                    //    setFragmentResult(
+                                                    //        "URL",
+                                                    //        bundleOf("URL" to startForResult.launch(intent)))
+                                                    //     setFragmentResultListener("URL") { key, bundle ->
+                                                    //    val URL = bundle.getString("URL")
+                                                    //    launcher.launch(WRITE_EXTERNAL_STORAGE)
+                                             /*   }
+                                            }
                                         },
-                                        "キャンセル",
-                                       {
-                                       //     Snackbar.make(it, "キャンセルしました。", Snackbar.LENGTH_SHORT)
-                                       //         .show()
-                                        }
-                                    )
+                                            "キャンセル",
+                                            {
+                                                //     Snackbar.make(it, "キャンセルしました。", Snackbar.LENGTH_SHORT)
+                                                //         .show()
+                                            })
+                                              */
+
+
+
                                     // setFragmentResultListener("URL") { key, bundle ->
                                     //    val URL = bundle.getString("URL")
                                     //     println("URL:$URL")
-                                    dialog.show(parentFragmentManager, "save_dialog")
+                                //dialog.show(parentFragmentManager, "save_dialog")
                                // }
                          //   }
-                        }
+
+                            }
                     }
             })
          }
 
 
-        private fun saveEnroll(URL: Uri?) {
+        //引数にURIを使用（registerForActivityResultの返り値）
+        private fun saveEnroll(uri: Uri) {
             when (args.goodId) {
+                //goodIdの型は、ObjectIdのため、初期値はNULL
+                    // つまり、新規登録の場合
                 null -> {
                     realm.executeTransaction { transactionRealm ->
-                        val maxId = realm.where<Goods>().count()
-                        //val maxId = realm.where<Schedule>().max()
-                        val nextId = (maxId.toLong() ?: 0L) + 1L
+                        val maxId = realm.where<Goods>().max("_id").toString()
+                        //countだとIDが削除されたときに対応できないのでmaxにする
+                        //val maxId = realm.where<Goods>().max("_id")
+                        println(maxId)
+                        val nextId = ((maxId).toLong() ?: 0L) + 1L
                         val goods = realm.createObject<Goods>(nextId)
                         goods.goods_name = binding.goodName.text.toString()
                         //setFragmentResultListener("URL") { key, bundle ->
                         //    val UR = bundle.getString("URL")
                         //    println("URL:" + URL)
-                       println("URL:" + URL)
-                        goods.goodURL = URL.toString()
-                        println(goods.goodURL)
+                        //println("URL:" + URL)
+
+                        //URIの活用方法
+                        //MediaScannerに登録を依頼する（2通り）
+                        //方法①　画像の登録をMediaScannerに依頼する方法
+                        //MediaScannerConnection.scanFile(this,
+                        //    URL, null,
+                        //    new OnScanCompletedListener() {
+                        //        @Override
+                        //        public void onScanCompleted(String path, Uri uri) {
+                        //            Log.v("MediaScanWork", "file " + path
+                        //                     + " was scanned seccessfully: " + uri);
+                        //        }
+                        //    });
+
+                        //方法②　Intent.ACTION_MEDIA_SCANNER_SCAN_FILEを使う方法
+                        //val mediaScanIntent =
+                        //    Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, URL)
+                        //requireContext().sendBroadcast(mediaScanIntent)
+
+                        //方法③　Uri→InputStream→Bitmap
+                        // 事前にシステムからそのファイルに付与されるURI権限を永続的に維持する。
+                        //val contentResolver = context?.applicationContext?.contentResolver
+                        //val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                        //        Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                        //if (URL != null) {
+                        //    if (contentResolver != null) {
+                        //        contentResolver.takePersistableUriPermission(URL, takeFlags)
+                        //    }
+                       // }
+                        goods.goodURL = uri.toString()
+                        println("URL:" + uri)
+                        context?.revokeUriPermission(uri,
+                            FLAG_GRANT_READ_URI_PERMISSION)
                     }
                     //Snackbar.make(view, "追加しました", Snackbar.LENGTH_SHORT)
                     //    .setAction("戻る") { findNavController().popBackStack() }
                     //    .setActionTextColor(Color.YELLOW)
                     //   .show()
                 }
+                //更新の場合
                 else -> {
                     realm.executeTransaction { db: Realm ->
+                        //findFirstメソッドを使用して、更新対象を取得する
                        val goods =
                             db.where<Goods>().equalTo("_id", args.goodId).findFirst()
                         goods?.goods_name = binding.goodName.text.toString()
                         //setFragmentResultListener("URL") { key, bundle ->
                         //     val URL = bundle.getString("URL")
                         //    println("URL:" + URL)
-                      println("URL:" + URL)
-                        goods?.goodURL = URL.toString()
+                        goods?.goodURL = uri.toString()
+                      println("URL:" + uri)
+                        context?.revokeUriPermission(uri,
+                            FLAG_GRANT_READ_URI_PERMISSION)
+
+                    //MediaScannerに登録を依頼する（2通り）
+                    //方法①　画像の登録をMediaScannerに依頼する方法
+                    //MediaScannerConnection.scanFile(this,
+                    //    URL, null,
+                    //    new OnScanCompletedListener() {
+                    //        @Override
+                    //        public void onScanCompleted(String path, Uri uri) {
+                    //            Log.v("MediaScanWork", "file " + path
+                    //                     + " was scanned seccessfully: " + uri);
+                    //        }
+                    //    });
+
+                    //方法②　Intent.ACTION_MEDIA_SCANNER_SCAN_FILEを使う方法
+                    //val mediaScanIntent =
+                    //    Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, URL)
+                    //requireContext().sendBroadcast(mediaScanIntent)
                     }
                    // Snackbar.make(view, "修正しました", Snackbar.LENGTH_SHORT)
                   //      .setAction("戻る") { findNavController().popBackStack() }
@@ -364,7 +481,7 @@ internal class EnrollAuthFragment : Fragment() {
                   //      .show()
                 }
             }
-       }
+}
 
 
         //private fun onContent(uri: Uri?): Uri? {

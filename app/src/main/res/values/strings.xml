@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">MyScheduler</string>
+    <string name="app_name">Goods Seller</string>
     <string name="action_settings">Settings</string>
     <string name="first_fragment_label">一覧表示</string>
     <string name="second_fragment_label">カレンダー表示</string>
@@ -20,4 +20,6 @@
     <string name="more">\u22EE</string>
     <string name="new_task">Create new task</string>
     <string name="logout">Log Out</string>
+    <string name="auth_update_btn">Auth_update_btn</string>
+    <string name="auth_del_btn">Auth_del_btn</string>
 </resources>

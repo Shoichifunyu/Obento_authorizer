@@ -33,71 +33,19 @@ class ShopsFragment : Fragment() {
         return binding.root
     }
 
-//class ShopsFragment : Fragment(){
-//    private lateinit var shops: List<Shop>
-//    override fun onCreateView(
-//            inflater: LayoutInflater, container: ViewGroup?,
-//        savedInstanceState: Bundle?
-//    ): View? {
-//        val view: View = inflater.inflate(R.layout.card_layout, container, false)
-
-//        val cardview: CardView = view.findViewById(R.id.shop_card_view)
-    //val adapter = ShopAdapter(shopList,ShopAdapter.OnClickListener{shop ->
-    //    view.findNavController().navigate(
-    //           ShopsFragmentDirections.actionShopsFragmentToGoodsFragment(shop))
-//        cardview.setOnClickListener { view.findNavController().navigate(R.id.action_shopsFragment_to_goodsFragment) }
-
-    //       return view
-    //   }
-
-    //    cardview.adapter = adapter
-
-    //    return view }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        //val shops = getShops(resources)
-        //binding.shopsKind.text = shops[position].shop_name
-        //shop_button.setOnClickListener{
-        //    navController.navigate(R.id.action_nav_goods)
-        //}
-        //view.findViewById<Button>(R.id.shop_button).setOnClickListener {
-        //shop_button.setOnClickListener {
-        //     findNavController().navigate(R.id.action_nav_goods)
-        //}
-        //val strValue01 = requireArguments().getString("VALUE01")
 
         binding.root.apply {
             layoutManager = LinearLayoutManager(context)
-            //adapter = ShopAdapter(context, getShops(resources))
             //ShopAdapterにGetShopsを代入して適用
             adapter = ShopAdapter(getShops(resources)).apply {
-                //setOnItemClickListener { position: Int ->
-                //navController.navigate(R.id.action_nav_goods)
-                //parentFragmentManager?.let {
-                //    manager: FragmentManager ->
-                //    val tag = "GoodsFragment"
-                //    var fragment = manager.findFragmentByTag(tag)
-                //    if (fragment == null) {
-                //        fragment = GoodsFragment()
-                //        fragment.arguments = Bundle().apply{
-                //            putInt(ROW_POSITION, position)
-                //        }
-                //        manager.beginTransaction().apply {
-                //            replace(R.id.content, fragment, tag)
-                //            addToBackStack(null)
-                //        }.commit()
-                //    }
                 setOnItemClickListener { position ->
                     if (position == 0) {
                         position.let {
                             val action = ShopsFragmentDirections.actionNavGoods()
                             findNavController().navigate(action)
                         }
-                    }
-                    if (position == 2) {
-                        val action = ShopsFragmentDirections.actionNavResgoods()
-                        findNavController().navigate(action)
                     }
                 }
             }
